@@ -36,12 +36,13 @@ class DashboardController extends Controller
                 Carbon::now()->startOfMonth(),
                 Carbon::now()->endOfMonth()
             ])->count();
-            
+
             // Chart data
-            $data['asset_by_condition'] = Asset::selectRaw('condition, COUNT(*) as count')
-                ->groupBy('condition')
+            $data['asset_by_condition'] = \DB::table('assets')
+                ->select(\DB::raw('`condition`, COUNT(*) as count'))
+                ->groupBy(\DB::raw('`condition`'))
                 ->get();
-            
+
             $data['asset_by_category'] = Asset::with('category')
                 ->selectRaw('category_id, COUNT(*) as count')
                 ->groupBy('category_id')

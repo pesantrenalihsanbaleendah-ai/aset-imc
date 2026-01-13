@@ -2,16 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Loan;
+use App\Models\Asset;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Services\WhatsAppService;
 
 class LoanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Loan::with(['asset', 'user', 'approver']);
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by user (for staff)
+        $user = Auth::user();
+        if ($user && $user->role && $user->role->name === 'staff') {
+            $query->where('user_id', $user->id);
+        }
+
+        $loans = $query->latest()->paginate(15);
+
+        return view('loans.index', compact('loans'));
     }
 
     /**
@@ -19,7 +39,10 @@ class LoanController extends Controller
      */
     public function create()
     {
-        //
+        $assets = Asset::where('status', 'active')->get();
+        $users = User::all();
+
+        return view('loans.create', compact('assets', 'users'));
     }
 
     /**
@@ -27,7 +50,38 @@ class LoanController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'asset_id' => 'required|exists:assets,id',
+            'user_id' => 'required|exists:users,id',
+            'purpose' => 'required|string',
+            'loan_date' => 'required|date',
+            'expected_return_date' => 'required|date|after:loan_date',
+            'notes' => 'nullable|string',
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+        ]);
+
+        $validated['status'] = 'pending';
+
+        if ($request->hasFile('document')) {
+            $validated['document_path'] = $request->file('document')->store('loans', 'public');
+        }
+
+        $loan = Loan::with(['asset', 'user'])->create($validated);
+
+        // Notify Admin
+        $adminPhone = \App\Models\Setting::get('whatsapp_receiver_number');
+        if ($adminPhone) {
+            $msg = "*Pengajuan Peminjaman Baru*\n\n"
+                . "Peminjam: {$loan->user->name}\n"
+                . "Aset: {$loan->asset->name} ({$loan->asset->code})\n"
+                . "Tgl Pinjam: {$loan->loan_date}\n"
+                . "Tujuan: {$loan->purpose}\n\n"
+                . "Silakan tinjau di panel admin.";
+            WhatsAppService::sendMessage($adminPhone, $msg);
+        }
+
+        return redirect()->route('loans.index')
+            ->with('success', 'Peminjaman berhasil diajukan.');
     }
 
     /**
@@ -35,7 +89,10 @@ class LoanController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $loan = Loan::with(['asset.category', 'asset.location', 'user', 'approver'])
+            ->findOrFail($id);
+
+        return view('loans.show', compact('loan'));
     }
 
     /**
@@ -43,7 +100,18 @@ class LoanController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $loan = Loan::findOrFail($id);
+
+        // Only allow editing pending loans
+        if ($loan->status !== 'pending') {
+            return redirect()->route('loans.index')
+                ->with('error', 'Hanya peminjaman dengan status pending yang dapat diedit.');
+        }
+
+        $assets = Asset::where('status', 'active')->get();
+        $users = User::all();
+
+        return view('loans.edit', compact('loan', 'assets', 'users'));
     }
 
     /**
@@ -51,7 +119,34 @@ class LoanController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $loan = Loan::findOrFail($id);
+
+        if ($loan->status !== 'pending') {
+            return redirect()->route('loans.index')
+                ->with('error', 'Hanya peminjaman dengan status pending yang dapat diperbarui.');
+        }
+
+        $validated = $request->validate([
+            'asset_id' => 'required|exists:assets,id',
+            'user_id' => 'required|exists:users,id',
+            'purpose' => 'required|string',
+            'loan_date' => 'required|date',
+            'expected_return_date' => 'required|date|after:loan_date',
+            'notes' => 'nullable|string',
+            'document' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+        ]);
+
+        if ($request->hasFile('document')) {
+            if ($loan->document_path) {
+                \Storage::disk('public')->delete($loan->document_path);
+            }
+            $validated['document_path'] = $request->file('document')->store('loans', 'public');
+        }
+
+        $loan->update($validated);
+
+        return redirect()->route('loans.index')
+            ->with('success', 'Peminjaman berhasil diperbarui.');
     }
 
     /**
@@ -59,6 +154,118 @@ class LoanController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $loan = Loan::findOrFail($id);
+
+        if ($loan->status !== 'pending') {
+            return redirect()->route('loans.index')
+                ->with('error', 'Hanya peminjaman dengan status pending yang dapat dihapus.');
+        }
+
+        if ($loan->document_path) {
+            \Storage::disk('public')->delete($loan->document_path);
+        }
+
+        $loan->delete();
+
+        return redirect()->route('loans.index')
+            ->with('success', 'Peminjaman berhasil dihapus.');
+    }
+
+    /**
+     * Approve loan
+     */
+    public function approve(string $id)
+    {
+        $loan = Loan::with('asset')->findOrFail($id);
+
+        if ($loan->status !== 'pending') {
+            return redirect()->back()
+                ->with('error', 'Peminjaman ini sudah diproses.');
+        }
+
+        $loan->update([
+            'status' => 'approved',
+            'approver_id' => Auth::id(),
+        ]);
+
+        // Update asset status
+        $loan->asset->update(['status' => 'maintenance']);
+
+        // Notify User
+        if ($loan->user->phone) {
+            $msg = "*Update Peminjaman Aset*\n\n"
+                . "Halo {$loan->user->name}, pengajuan peminjaman aset *{$loan->asset->name}* Anda telah *DISETUJUI*.\n"
+                . "Silakan ambil aset di lokasi terkait.\n\n"
+                . "Terima kasih.";
+            WhatsAppService::sendMessage($loan->user->phone, $msg);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Peminjaman berhasil disetujui.');
+    }
+
+    /**
+     * Reject loan
+     */
+    public function reject(string $id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        if ($loan->status !== 'pending') {
+            return redirect()->back()
+                ->with('error', 'Peminjaman ini sudah diproses.');
+        }
+
+        $loan->update([
+            'status' => 'rejected',
+            'approver_id' => Auth::id(),
+        ]);
+
+        // Notify User
+        if ($loan->user && $loan->user->phone) {
+            $loan = $loan->load('asset'); // ensure asset is loaded
+            $msg = "*Update Peminjaman Aset*\n\n"
+                . "Halo {$loan->user->name}, mohon maaf pengajuan peminjaman aset *{$loan->asset->name}* Anda telah *DITOLAK*.\n\n"
+                . "Terima kasih.";
+            WhatsAppService::sendMessage($loan->user->phone, $msg);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Peminjaman berhasil ditolak.');
+    }
+
+    /**
+     * Return asset
+     */
+    public function return(Request $request, string $id)
+    {
+        $loan = Loan::with('asset')->findOrFail($id);
+
+        if ($loan->status !== 'approved') {
+            return redirect()->back()
+                ->with('error', 'Hanya peminjaman yang disetujui yang dapat dikembalikan.');
+        }
+
+        $loan->update([
+            'status' => 'returned',
+            'actual_return_date' => now(),
+        ]);
+
+        // Update asset status back to active
+        $loan->asset->update(['status' => 'active']);
+
+        return redirect()->back()
+            ->with('success', 'Aset berhasil dikembalikan.');
+    }
+
+    /**
+     * Print loan document
+     */
+    public function print(string $id)
+    {
+        $loan = Loan::with(['asset.category', 'asset.location', 'user', 'approver'])
+            ->findOrFail($id);
+
+        return view('loans.print', compact('loan'));
     }
 }
