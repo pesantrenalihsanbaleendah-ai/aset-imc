@@ -54,11 +54,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Asset Management
-    Route::prefix('assets')->group(function () {
-        Route::resource('', AssetController::class)->names('assets');
-        Route::post('/{asset}/qr', [AssetController::class, 'generateQR'])->name('assets.qr');
-        Route::post('/import', [AssetController::class, 'import'])->name('assets.import');
-    });
+    Route::resource('assets', AssetController::class);
+    Route::post('/assets/{asset}/qr', [AssetController::class, 'generateQR'])->name('assets.qr');
+    Route::post('/assets/import', [AssetController::class, 'import'])->name('assets.import');
 
     // Asset Categories
     Route::resource('categories', AssetCategoryController::class)->names('categories');
@@ -67,20 +65,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('locations', LocationController::class)->names('locations');
 
     // Loans
-    Route::prefix('loans')->group(function () {
-        Route::resource('', LoanController::class)->names('loans');
-        Route::post('/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
-        Route::post('/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
-        Route::post('/{loan}/return', [LoanController::class, 'return'])->name('loans.return');
-        Route::get('/{loan}/print', [LoanController::class, 'print'])->name('loans.print');
-    });
+    Route::resource('loans', LoanController::class);
+    Route::post('/loans/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
+    Route::post('/loans/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
+    Route::post('/loans/{loan}/return', [LoanController::class, 'return'])->name('loans.return');
+    Route::get('/loans/{loan}/print', [LoanController::class, 'print'])->name('loans.print');
 
     // Maintenance
-    Route::prefix('maintenance')->group(function () {
-        Route::resource('', MaintenanceController::class)->names('maintenance');
-        Route::post('/{maintenance}/approve', [MaintenanceController::class, 'approve'])->name('maintenance.approve');
-        Route::post('/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
-    });
+    Route::resource('maintenance', MaintenanceController::class);
+    Route::post('/maintenance/{maintenance}/approve', [MaintenanceController::class, 'approve'])->name('maintenance.approve');
+    Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
 
 
     // Reports

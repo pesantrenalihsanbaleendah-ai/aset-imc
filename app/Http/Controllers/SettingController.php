@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SettingController extends Controller
 {
@@ -33,30 +34,76 @@ class SettingController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'settings' => 'required|array',
-        ]);
+        // Debug: Log what we're receiving
+        Log::info('POST Data:', $request->all());
+        Log::info('FILES Data:', $_FILES);
 
-        foreach ($request->settings as $key => $value) {
-            $setting = Setting::where('key', $key)->first();
+        // Get all settings that might be updated
+        $allSettings = Setting::all();
 
-            if ($setting) {
-                // Handle file uploads for image type
-                if ($setting->type === 'image' && $request->hasFile("settings.{$key}")) {
-                    // Delete old file if exists
-                    if ($setting->value && Storage::disk('public')->exists($setting->value)) {
-                        Storage::disk('public')->delete($setting->value);
+        foreach ($allSettings as $setting) {
+            $key = $setting->key;
+            
+            // Handle file uploads for image type - SOLUSI FINAL (PHP NATIVE)
+            if ($setting->type === 'image') {
+                // Cek langsung dari $_FILES (bypass Laravel request)
+                if (isset($_FILES['settings']['name'][$key]) && 
+                    !empty($_FILES['settings']['name'][$key]) && 
+                    $_FILES['settings']['error'][$key] === UPLOAD_ERR_OK) {
+                    
+                    $tmpName = $_FILES['settings']['tmp_name'][$key];
+                    $originalName = $_FILES['settings']['name'][$key];
+                    $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+                    
+                    // Generate unique filename
+                    $filename = uniqid() . '.' . $extension;
+                    
+                    // Tentukan path tujuan
+                    $destinationPath = storage_path('app/public/settings');
+                    
+                    // Buat folder jika belum ada
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
                     }
-
-                    // Store new file
-                    $value = $request->file("settings.{$key}")->store('settings', 'public');
+                    
+                    $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+                    
+                    // Move file menggunakan PHP native
+                    if (move_uploaded_file($tmpName, $fullPath)) {
+                        // Delete old file if exists
+                        if ($setting->value) {
+                            $oldFile = storage_path('app/public/' . $setting->value);
+                            if (file_exists($oldFile)) {
+                                unlink($oldFile);
+                            }
+                        }
+                        
+                        // Save relative path to database
+                        $relativePath = 'settings/' . $filename;
+                        $setting->update(['value' => $relativePath]);
+                        Log::info("Successfully uploaded {$key}: {$relativePath}");
+                    } else {
+                        Log::error("Failed to move uploaded file for {$key}");
+                    }
                 }
+                // If no file uploaded, don't update (keep existing value)
+                continue;
+            }
 
-                // Handle boolean values
-                if ($setting->type === 'boolean') {
-                    $value = $request->has("settings.{$key}") ? '1' : '0';
+            // Handle boolean values
+            if ($setting->type === 'boolean') {
+                $value = $request->has("settings.{$key}") ? '1' : '0';
+                $setting->update(['value' => $value]);
+                continue;
+            }
+
+            // Handle other types (text, textarea, color, etc.)
+            if ($request->has("settings.{$key}")) {
+                $value = $request->input("settings.{$key}");
+                // Skip if value is an UploadedFile object (already handled above)
+                if ($value instanceof \Illuminate\Http\UploadedFile) {
+                    continue;
                 }
-
                 $setting->update(['value' => $value]);
             }
         }
@@ -115,9 +162,13 @@ class SettingController extends Controller
 
             foreach ($settings as $setting) {
                 // Delete uploaded files
-                if ($setting->type === 'image' && $setting->value) {
-                    if (Storage::disk('public')->exists($setting->value)) {
-                        Storage::disk('public')->delete($setting->value);
+                if ($setting->type === 'image') {
+                    $oldPath = $setting->value;
+                    if (!empty($oldPath) && is_string($oldPath)) {
+                        $trimmedPath = trim($oldPath);
+                        if ($trimmedPath !== '' && Storage::disk('public')->exists($trimmedPath)) {
+                            Storage::disk('public')->delete($trimmedPath);
+                        }
                     }
                 }
             }
