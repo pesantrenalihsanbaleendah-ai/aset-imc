@@ -91,8 +91,22 @@ class AssetController extends Controller
             'photo' => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('photo')) {
-            $validated['photo_path'] = $request->file('photo')->store('assets', 'public');
+        // Handle photo upload using PHP native
+        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['photo']['tmp_name'];
+            $originalName = $_FILES['photo']['name'];
+            $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+            $filename = uniqid() . '.' . $extension;
+            
+            $destinationPath = storage_path('app/public/assets');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+            if (move_uploaded_file($tmpName, $fullPath)) {
+                $validated['photo_path'] = 'assets/' . $filename;
+            }
         }
 
         Asset::create($validated);
@@ -150,12 +164,29 @@ class AssetController extends Controller
             'photo' => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('photo')) {
-            // Delete old photo
-            if ($asset->photo_path) {
-                Storage::disk('public')->delete($asset->photo_path);
+        // Handle photo upload using PHP native
+        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['photo']['tmp_name'];
+            $originalName = $_FILES['photo']['name'];
+            $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+            $filename = uniqid() . '.' . $extension;
+            
+            $destinationPath = storage_path('app/public/assets');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
             }
-            $validated['photo_path'] = $request->file('photo')->store('assets', 'public');
+            
+            $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+            if (move_uploaded_file($tmpName, $fullPath)) {
+                // Delete old photo if exists
+                if ($asset->photo_path) {
+                    $oldFile = storage_path('app/public/' . $asset->photo_path);
+                    if (file_exists($oldFile)) {
+                        unlink($oldFile);
+                    }
+                }
+                $validated['photo_path'] = 'assets/' . $filename;
+            }
         }
 
         $asset->update($validated);
@@ -189,12 +220,12 @@ class AssetController extends Controller
     {
         $asset = Asset::findOrFail($id);
 
-        // Generate QR code
-        $qrCode = 'ASSET-' . $asset->asset_code . '-' . time();
+        // Generate QR code with URL to public asset page
+        $qrCode = route('assets.public', $asset->id);
         $asset->update(['qr_code' => $qrCode]);
 
         return redirect()->back()
-            ->with('success', 'QR Code berhasil dibuat.');
+            ->with('success', 'QR Code berhasil dibuat. Scan QR untuk melihat detail aset.');
     }
 
     /**
@@ -210,5 +241,15 @@ class AssetController extends Controller
 
         return redirect()->route('assets.index')
             ->with('success', 'Aset berhasil diimpor.');
+    }
+
+    /**
+     */
+    public function publicView(string $id)
+    {
+        $asset = Asset::with(['category', 'location', 'responsibleUser'])
+            ->findOrFail($id);
+
+        return view('assets.public', compact('asset'));
     }
 }

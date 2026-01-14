@@ -11,6 +11,10 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\SettingController;
+// Public Routes
+Route::get('/asset/{id}/public', [AssetController::class, 'publicView'])->name('assets.public');
+
+
 
 Route::get('/', function () {
     if (Auth::check()) {

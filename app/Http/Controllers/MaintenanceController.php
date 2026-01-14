@@ -58,8 +58,22 @@ class MaintenanceController extends Controller
         $validated['requested_by'] = Auth::id();
         $validated['status'] = 'pending';
 
-        if ($request->hasFile('document')) {
-            $validated['document_path'] = $request->file('document')->store('maintenance', 'public');
+        // Handle document upload using PHP native
+        if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['document']['tmp_name'];
+            $originalName = $_FILES['document']['name'];
+            $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+            $filename = uniqid() . '.' . $extension;
+            
+            $destinationPath = storage_path('app/public/maintenance');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+            if (move_uploaded_file($tmpName, $fullPath)) {
+                $validated['document_path'] = 'maintenance/' . $filename;
+            }
         }
 
         Maintenance::create($validated);
@@ -118,11 +132,29 @@ class MaintenanceController extends Controller
             'document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
         ]);
 
-        if ($request->hasFile('document')) {
-            if ($maintenance->document_path) {
-                \Storage::disk('public')->delete($maintenance->document_path);
+        // Handle document upload using PHP native
+        if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['document']['tmp_name'];
+            $originalName = $_FILES['document']['name'];
+            $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+            $filename = uniqid() . '.' . $extension;
+            
+            $destinationPath = storage_path('app/public/maintenance');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
             }
-            $validated['document_path'] = $request->file('document')->store('maintenance', 'public');
+            
+            $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+            if (move_uploaded_file($tmpName, $fullPath)) {
+                // Delete old document if exists
+                if ($maintenance->document_path) {
+                    $oldFile = storage_path('app/public/' . $maintenance->document_path);
+                    if (file_exists($oldFile)) {
+                        unlink($oldFile);
+                    }
+                }
+                $validated['document_path'] = 'maintenance/' . $filename;
+            }
         }
 
         $maintenance->update($validated);
