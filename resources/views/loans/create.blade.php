@@ -39,18 +39,13 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Peminjam <span class="text-danger">*</span></label>
-                                <select name="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
-                                    <option value="">Pilih Peminjam</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}" {{ old('user_id', auth()->id()) == $user->id ? 'selected' : '' }}>
-                                            {{ $user->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('user_id')
+                                <label class="form-label">Nama Pengaju <span class="text-danger">*</span></label>
+                                <input type="text" name="requester_name" class="form-control @error('requester_name') is-invalid @enderror"
+                                    value="{{ old('requester_name') }}" placeholder="Masukkan nama pengaju" required>
+                                @error('requester_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">Nama orang yang mengajukan peminjaman</small>
                             </div>
 
                             <div class="mb-3">

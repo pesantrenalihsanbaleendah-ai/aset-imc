@@ -62,8 +62,8 @@
                                 </p>
                             </div>
                             <div class="col-md-6">
-                                <strong>Peminjam:</strong>
-                                <p>{{ $loan->user->name ?? '-' }}</p>
+                                <strong>Pengaju:</strong>
+                                <p>{{ $loan->requester_name ?? '-' }}</p>
                             </div>
                             <div class="col-md-6">
                                 <strong>Penanggung Jawab:</strong>

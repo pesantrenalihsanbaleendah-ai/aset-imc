@@ -73,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Loans
     Route::resource('loans', LoanController::class);
+    Route::get('/loans-history', [LoanController::class, 'history'])->name('loans.history');
     Route::post('/loans/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
     Route::post('/loans/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
     Route::post('/loans/{loan}/return', [LoanController::class, 'return'])->name('loans.return');

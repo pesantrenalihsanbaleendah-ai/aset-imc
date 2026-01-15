@@ -16,7 +16,7 @@ class LoanController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Loan::with(['asset', 'user', 'approver']);
+        $query = Loan::with(['asset', 'user', 'user.role', 'approver']);
 
         // Filter by status
         if ($request->filled('status')) {
@@ -32,6 +32,23 @@ class LoanController extends Controller
         $loans = $query->latest()->paginate(15);
 
         return view('loans.index', compact('loans'));
+    }
+
+    /**
+     * Display loan history
+     */
+    public function history(Request $request)
+    {
+        $query = Loan::with(['asset', 'user', 'user.role', 'approver']);
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $loans = $query->latest()->paginate(15);
+
+        return view('loans.history', compact('loans'));
     }
 
     /**
@@ -52,7 +69,7 @@ class LoanController extends Controller
     {
         $validated = $request->validate([
             'asset_id' => 'required|exists:assets,id',
-            'user_id' => 'required|exists:users,id',
+            'requester_name' => 'required|string|max:255',
             'responsible_person' => 'required|string|max:255',
             'purpose' => 'required|string',
             'loan_date' => 'required|date',
@@ -62,6 +79,7 @@ class LoanController extends Controller
         ]);
 
         $validated['status'] = 'pending';
+        $validated['user_id'] = auth()->id(); // Set to logged in user
 
         // Handle document upload using PHP native
         if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
@@ -83,15 +101,21 @@ class LoanController extends Controller
 
         $loan = Loan::with(['asset', 'user'])->create($validated);
 
-        // Notify Admin
+        // Notify Admin with approval instructions
         $adminPhone = \App\Models\Setting::get('whatsapp_receiver_number');
         if ($adminPhone) {
             $msg = "*Pengajuan Peminjaman Baru*\n\n"
-                . "Peminjam: {$loan->user->name}\n"
-                . "Aset: {$loan->asset->name} ({$loan->asset->code})\n"
-                . "Tgl Pinjam: {$loan->loan_date}\n"
+                . "Pengaju: {$loan->requester_name}\n"
+                . "Penanggung Jawab: {$loan->responsible_person}\n"
+                . "Aset: {$loan->asset->name} ({$loan->asset->asset_code})\n"
+                . "Tgl Pinjam: " . $loan->loan_date->format('d M Y') . "\n"
+                . "Tgl Kembali: " . $loan->expected_return_date->format('d M Y') . "\n"
                 . "Tujuan: {$loan->purpose}\n\n"
-                . "Silakan tinjau di panel admin.";
+                . "━━━━━━━━━━━━━━━━━━\n"
+                . "💡 *Cara Approval:*\n"
+                . "• Ketik *1* untuk SETUJU\n"
+                . "• Ketik *2* untuk TOLAK\n"
+                . "━━━━━━━━━━━━━━━━━━";
             WhatsAppService::sendMessage($adminPhone, $msg);
         }
 

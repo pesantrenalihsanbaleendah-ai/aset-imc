@@ -12,6 +12,7 @@ class Loan extends Model
     protected $fillable = [
         'asset_id',
         'user_id',
+        'requester_name',
         'responsible_person',
         'approver_id',
         'purpose',

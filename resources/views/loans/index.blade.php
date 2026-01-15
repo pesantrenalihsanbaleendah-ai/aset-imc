@@ -58,10 +58,10 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Aset</th>
-                                <th>Peminjam</th>
+                                <th>Role Login</th>
+                                <th>Pengaju</th>
                                 <th>Penanggung Jawab</th>
-                                <th>Tujuan</th>
+                                <th>Aset</th>
                                 <th>Tgl Pinjam</th>
                                 <th>Tgl Kembali</th>
                                 <th>Status</th>
@@ -72,17 +72,33 @@
                             @forelse($loans as $loan)
                                 <tr>
                                     <td>
+                                        @if($loan->user && $loan->user->role)
+                                            <span class="badge bg-info">{{ $loan->user->role->description }}</span>
+                                        @else
+                                            <span class="badge bg-secondary">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <strong>{{ $loan->requester_name ?? '-' }}</strong>
+                                        @if($loan->user)
+                                            <br><small class="text-muted">Login: {{ $loan->user->name }}</small>
+                                        @endif
+                                    </td>
+                                    <td>{{ $loan->responsible_person ?? '-' }}</td>
+                                    <td>
                                         <strong>{{ $loan->asset->name ?? '-' }}</strong><br>
                                         <small class="text-muted">{{ $loan->asset->asset_code ?? '-' }}</small>
                                     </td>
-                                    <td>{{ $loan->user->name ?? '-' }}</td>
-                                    <td>{{ $loan->responsible_person ?? '-' }}</td>
-                                    <td>{{ Str::limit($loan->purpose, 30) }}</td>
                                     <td>{{ $loan->loan_date->format('d/m/Y') }}</td>
                                     <td>
-                                        {{ $loan->expected_return_date->format('d/m/Y') }}
-                                        @if($loan->isOverdue())
-                                            <span class="badge bg-danger ms-1">Terlambat</span>
+                                        @if($loan->actual_return_date)
+                                            <span class="text-success fw-bold">{{ $loan->actual_return_date->format('d/m/Y') }}</span>
+                                            <br><small class="text-muted">Aktual</small>
+                                        @else
+                                            {{ $loan->expected_return_date->format('d/m/Y') }}
+                                            @if($loan->isOverdue())
+                                                <br><span class="badge bg-danger">Terlambat</span>
+                                            @endif
                                         @endif
                                     </td>
                                     <td>
@@ -144,7 +160,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                         <p class="text-muted">Belum ada peminjaman.</p>
                                     </td>
