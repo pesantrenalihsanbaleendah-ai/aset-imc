@@ -14,6 +14,9 @@ use App\Http\Controllers\SettingController;
 // Public Routes
 Route::get('/asset/{id}/public', [AssetController::class, 'publicView'])->name('assets.public');
 
+// WhatsApp Webhook (Public)
+Route::post('/webhook/whatsapp', [\App\Http\Controllers\WhatsAppWebhookController::class, 'handle'])->name('webhook.whatsapp');
+
 
 
 Route::get('/', function () {

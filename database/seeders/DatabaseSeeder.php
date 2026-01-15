@@ -266,5 +266,12 @@ class DatabaseSeeder extends Seeder
             'warranty_until' => now()->subMonths(2),
             'serial_number' => 'HP-LJ-2023-015',
         ]);
+
+        $this->call([
+            AdminUserSeeder::class,
+            ApproverUserSeeder::class,
+            StaffUserSeeder::class,
+            AuditorUserSeeder::class,
+        ]);
     }
 }

@@ -54,6 +54,15 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label">Nama Penanggung Jawab <span class="text-danger">*</span></label>
+                                <input type="text" name="responsible_person" class="form-control @error('responsible_person') is-invalid @enderror"
+                                    value="{{ old('responsible_person') }}" placeholder="Masukkan nama penanggung jawab" required>
+                                @error('responsible_person')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Tujuan Peminjaman <span class="text-danger">*</span></label>
                                 <textarea name="purpose" class="form-control @error('purpose') is-invalid @enderror"
                                     rows="4" required

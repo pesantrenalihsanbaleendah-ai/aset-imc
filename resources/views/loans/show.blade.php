@@ -65,6 +65,10 @@
                                 <strong>Peminjam:</strong>
                                 <p>{{ $loan->user->name ?? '-' }}</p>
                             </div>
+                            <div class="col-md-6">
+                                <strong>Penanggung Jawab:</strong>
+                                <p>{{ $loan->responsible_person ?? '-' }}</p>
+                            </div>
                         </div>
 
                         <div class="row mb-3">

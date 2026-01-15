@@ -100,9 +100,9 @@
                 </button>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
+                <div class="alert alert-info py-2 small">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Informasi:</strong> WhatsApp Gateway digunakan untuk mengirim notifikasi otomatis ke user atau grup.
+                    <strong>Interactive Approval:</strong> Balas dengan angka <b>1</b> pada chat WhatsApp (pribadi/grup) untuk menyetujui pengajuan terbaru secara otomatis.
                 </div>
                 
                 <div class="row">
@@ -128,8 +128,7 @@
                                        placeholder="{{ 
                                            $setting->key === 'whatsapp_endpoint' ? 'https://api.whatsapp-gateway.com/send' :
                                            ($setting->key === 'whatsapp_sender_number' ? '628123456789' :
-                                           ($setting->key === 'whatsapp_receiver_number' ? '628987654321' :
-                                           ($setting->key === 'whatsapp_group_id' ? '120363XXXXXX@g.us' : '')))
+                                           ($setting->key === 'whatsapp_receiver_number' ? '628987654321 atau 120363XXXXXX@g.us' : ''))
                                        }}">
                             @endif
                             
@@ -138,9 +137,7 @@
                             @elseif($setting->key === 'whatsapp_sender_number')
                                 <small class="text-muted">Nomor pengirim (format: 628xxx)</small>
                             @elseif($setting->key === 'whatsapp_receiver_number')
-                                <small class="text-muted">Nomor penerima default</small>
-                            @elseif($setting->key === 'whatsapp_group_id')
-                                <small class="text-muted">ID grup WhatsApp (opsional)</small>
+                                <small class="text-muted">Nomor HP (628xxx) atau ID Grup WhatsApp</small>
                             @endif
                         </div>
                     @endforeach

@@ -53,6 +53,7 @@ class LoanController extends Controller
         $validated = $request->validate([
             'asset_id' => 'required|exists:assets,id',
             'user_id' => 'required|exists:users,id',
+            'responsible_person' => 'required|string|max:255',
             'purpose' => 'required|string',
             'loan_date' => 'required|date',
             'expected_return_date' => 'required|date|after:loan_date',
@@ -143,6 +144,7 @@ class LoanController extends Controller
         $validated = $request->validate([
             'asset_id' => 'required|exists:assets,id',
             'user_id' => 'required|exists:users,id',
+            'responsible_person' => 'required|string|max:255',
             'purpose' => 'required|string',
             'loan_date' => 'required|date',
             'expected_return_date' => 'required|date|after:loan_date',

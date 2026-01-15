@@ -60,6 +60,7 @@
                             <tr>
                                 <th>Aset</th>
                                 <th>Peminjam</th>
+                                <th>Penanggung Jawab</th>
                                 <th>Tujuan</th>
                                 <th>Tgl Pinjam</th>
                                 <th>Tgl Kembali</th>
@@ -75,6 +76,7 @@
                                         <small class="text-muted">{{ $loan->asset->asset_code ?? '-' }}</small>
                                     </td>
                                     <td>{{ $loan->user->name ?? '-' }}</td>
+                                    <td>{{ $loan->responsible_person ?? '-' }}</td>
                                     <td>{{ Str::limit($loan->purpose, 30) }}</td>
                                     <td>{{ $loan->loan_date->format('d/m/Y') }}</td>
                                     <td>
