@@ -69,4 +69,27 @@ class Asset extends Model
     {
         return $this->hasMany(Disposal::class);
     }
+
+    /**
+     * Generate the next asset code based on prefix setting
+     */
+    public static function generateNextCode()
+    {
+        $prefix = Setting::get('asset_code_prefix', 'AST');
+        $year = now()->format('Y');
+        
+        // Find the last asset with the same prefix and year
+        $lastAsset = self::where('asset_code', 'like', "{$prefix}-{$year}-%")
+            ->orderBy('asset_code', 'desc')
+            ->first();
+
+        $number = 1;
+        if ($lastAsset) {
+            $parts = explode('-', $lastAsset->asset_code);
+            $lastNumber = (int) end($parts);
+            $number = $lastNumber + 1;
+        }
+
+        return $prefix . '-' . $year . '-' . str_pad($number, 4, '0', STR_PAD_LEFT);
+    }
 }

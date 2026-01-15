@@ -64,8 +64,9 @@ class AssetController extends Controller
         $categories = AssetCategory::all();
         $locations = Location::all();
         $users = User::all();
+        $nextCode = Asset::generateNextCode();
 
-        return view('assets.create', compact('categories', 'locations', 'users'));
+        return view('assets.create', compact('categories', 'locations', 'users', 'nextCode'));
     }
 
     /**
@@ -73,6 +74,11 @@ class AssetController extends Controller
      */
     public function store(Request $request)
     {
+        // If asset_code is empty, generate it
+        if (!$request->filled('asset_code')) {
+            $request->merge(['asset_code' => Asset::generateNextCode()]);
+        }
+
         $validated = $request->validate([
             'asset_code' => 'required|unique:assets',
             'name' => 'required|string|max:255',
@@ -91,7 +97,6 @@ class AssetController extends Controller
             'photo' => 'nullable|image|max:2048',
         ]);
 
-        // Handle photo upload using PHP native
         if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
             $tmpName = $_FILES['photo']['tmp_name'];
             $originalName = $_FILES['photo']['name'];
@@ -109,7 +114,13 @@ class AssetController extends Controller
             }
         }
 
-        Asset::create($validated);
+        $asset = Asset::create($validated);
+
+        // Generate QR code automatically if enabled in settings
+        if (\App\Models\Setting::get('auto_generate_qr') == '1') {
+            $qrCodeUrl = route('assets.public', $asset->id);
+            $asset->update(['qr_code' => $qrCodeUrl]);
+        }
 
         return redirect()->route('assets.index')
             ->with('success', 'Aset berhasil ditambahkan.');

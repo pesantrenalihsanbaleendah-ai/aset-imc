@@ -27,7 +27,7 @@
                                 <label class="form-label">Asset Code <span class="text-danger">*</span></label>
                                 <input type="text" name="asset_code"
                                     class="form-control @error('asset_code') is-invalid @enderror"
-                                    value="{{ old('asset_code') }}" required>
+                                    value="{{ old('asset_code', $nextCode) }}" required>
                                 @error('asset_code')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
