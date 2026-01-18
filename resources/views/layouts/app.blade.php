@@ -338,6 +338,53 @@
         .sidebar-overlay.show {
             display: block;
         }
+
+        /* Notification Dropdown Custom Styling */
+        .notification-dropdown {
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            padding: 0;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: #1e293b;
+        }
+
+        .notification-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .notification-item.unread {
+            background-color: #f0f7ff;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 10px;
+            padding: 2px 5px;
+        }
     </style>
     @stack('styles')
 </head>
@@ -434,9 +481,58 @@
         <div class="topbar">
             <h1 class="mb-0">@yield('page-title', 'Dashboard')</h1>
             <div class="d-flex align-items-center gap-3">
-                <span>{{ auth()->user()->name }}</span>
-                <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=3b82f6&color=fff"
-                    alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                
+                {{-- Notification Bell --}}
+                <div class="dropdown me-3">
+                    <button class="btn btn-link link-dark position-relative p-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell fs-5"></i>
+                        @if(isset($unreadCount) && $unreadCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end notification-dropdown p-0">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">Notifikasi</h6>
+                            @if(isset($unreadCount) && $unreadCount > 0)
+                                <a href="#" class="small text-decoration-none">Tandai semua dibaca</a>
+                            @endif
+                        </div>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            @if(isset($notifications) && $notifications->count() > 0)
+                                @foreach($notifications as $notif)
+                                    <a href="#" class="notification-item {{ !$notif->read ? 'unread' : '' }}">
+                                        <div class="d-flex gap-3">
+                                            <div class="notification-icon {{ str_contains($notif->type, 'approved') ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                                                <i class="fas {{ str_contains($notif->type, 'approved') ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold small">{{ $notif->title }}</div>
+                                                <div class="text-muted small text-wrap" style="max-width: 220px;">{{ $notif->message }}</div>
+                                                <div class="text-muted mt-1" style="font-size: 10px;">{{ $notif->created_at->diffForHumans() }}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            @else
+                                <div class="p-4 text-center text-muted">
+                                    <i class="fas fa-bell-slash d-block fs-2 mb-2 opacity-25"></i>
+                                    <span class="small">Belum ada notifikasi</span>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-2 border-top text-center">
+                            <a href="#" class="small text-decoration-none">Lihat Semua</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <span class="d-none d-sm-inline">{{ auth()->user()->name }}</span>
+                    <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=3b82f6&color=fff"
+                        alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                </div>
             </div>
         </div>
 

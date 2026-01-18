@@ -19,6 +19,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
+            if (auth()->check()) {
+                $notifications = \App\Models\Notification::where('user_id', auth()->id())
+                    ->where('read', false)
+                    ->latest()
+                    ->take(5)
+                    ->get();
+                $unreadCount = \App\Models\Notification::where('user_id', auth()->id())
+                    ->where('read', false)
+                    ->count();
+                
+                $view->with(compact('notifications', 'unreadCount'));
+            }
+        });
     }
 }

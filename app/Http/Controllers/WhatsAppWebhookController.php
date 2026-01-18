@@ -6,9 +6,11 @@ use App\Models\Loan;
 use App\Models\Maintenance;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Notification;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class WhatsAppWebhookController extends Controller
 {
@@ -92,25 +94,74 @@ class WhatsAppWebhookController extends Controller
             $target->update([
                 'status' => 'approved',
                 'approver_id' => $user->id,
+                'approved_at' => now(),
             ]);
-            $target->asset->update(['status' => 'maintenance']);
             
-            $msg = "✅ *Peminjaman DISETUJUI*\n\nAset: {$target->asset->name}\nPeminjam: {$target->user->name}\nDisetujui oleh: {$user->name}";
+            // Update asset status to 'on_loan' (dipinjam)
+            $target->asset->update(['status' => 'on_loan']);
+            
+            // Send detailed WhatsApp notification to approver
+            $msg = "✅ *PEMINJAMAN DISETUJUI*\n\n";
+            $msg .= "📦 Aset: {$target->asset->name}\n";
+            $msg .= "🏷️ Kode: {$target->asset->code}\n";
+            $msg .= "👤 Peminjam: {$target->requester_name}\n";
+            $msg .= "📅 Tanggal Pinjam: " . $target->loan_date->format('d/m/Y') . "\n";
+            $msg .= "📅 Tanggal Kembali: " . $target->expected_return_date->format('d/m/Y') . "\n";
+            $msg .= "✅ Disetujui oleh: {$user->name}\n";
+            $msg .= "\nStatus aset telah diubah menjadi: *DIPINJAM*";
             WhatsAppService::sendMessage($sender, $msg);
             
             // Notify the actual borrower
             if ($target->user->phone) {
-                WhatsAppService::sendMessage($target->user->phone, "Halo {$target->user->name}, pengajuan peminjaman aset *{$target->asset->name}* Anda telah *DISETUJUI*.");
+                $borrowerMsg = "✅ *PEMINJAMAN DISETUJUI*\n\n";
+                $borrowerMsg .= "Halo {$target->user->name},\n\n";
+                $borrowerMsg .= "Pengajuan peminjaman Anda telah *DISETUJUI*\n\n";
+                $borrowerMsg .= "📦 Aset: {$target->asset->name}\n";
+                $borrowerMsg .= "🏷️ Kode: {$target->asset->code}\n";
+                $borrowerMsg .= "📅 Tanggal Pinjam: " . $target->loan_date->format('d/m/Y') . "\n";
+                $borrowerMsg .= "📅 Harus Kembali: " . $target->expected_return_date->format('d/m/Y') . "\n";
+                $borrowerMsg .= "✅ Disetujui oleh: {$user->name}\n\n";
+                $borrowerMsg .= "Silakan ambil aset sesuai jadwal. Terima kasih!";
+                WhatsAppService::sendMessage($target->user->phone, $borrowerMsg);
             }
+            
+            // Create dashboard notification
+            Notification::create([
+                'user_id' => $target->user_id,
+                'title' => 'Peminjaman Disetujui',
+                'message' => "Peminjaman aset {$target->asset->name} telah disetujui oleh {$user->name}",
+                'type' => 'loan_approved',
+                'read' => false,
+            ]);
+            
         } else {
             $target->update([
                 'status' => 'approved',
                 'approved_by' => $user->id,
+                'approved_at' => now(),
             ]);
+            
+            // Update asset status to 'maintenance' for maintenance requests
             $target->asset->update(['status' => 'maintenance']);
             
-            $msg = "✅ *Pemeliharaan DISETUJUI*\n\nAset: {$target->asset->name}\nTipe: {$target->type}\nDisetujui oleh: {$user->name}";
+            // Send detailed WhatsApp notification
+            $msg = "✅ *PEMELIHARAAN DISETUJUI*\n\n";
+            $msg .= "📦 Aset: {$target->asset->name}\n";
+            $msg .= "🏷️ Kode: {$target->asset->code}\n";
+            $msg .= "🔧 Tipe: {$target->type}\n";
+            $msg .= "📅 Tanggal: " . $target->maintenance_date->format('d/m/Y') . "\n";
+            $msg .= "✅ Disetujui oleh: {$user->name}\n";
+            $msg .= "\nStatus aset telah diubah menjadi: *MAINTENANCE*";
             WhatsAppService::sendMessage($sender, $msg);
+            
+            // Create dashboard notification
+            Notification::create([
+                'user_id' => $target->user_id ?? $user->id,
+                'title' => 'Pemeliharaan Disetujui',
+                'message' => "Pemeliharaan aset {$target->asset->name} telah disetujui oleh {$user->name}",
+                'type' => 'maintenance_approved',
+                'read' => false,
+            ]);
         }
 
         return response()->json(['status' => 'success']);
@@ -164,23 +215,71 @@ class WhatsAppWebhookController extends Controller
             $target->update([
                 'status' => 'rejected',
                 'approver_id' => $user->id,
+                'approved_at' => now(),
             ]);
             
-            $msg = "❌ *Peminjaman DITOLAK*\n\nAset: {$target->asset->name}\nPengaju: {$target->requester_name}\nDitolak oleh: {$user->name}";
+            // Asset status remains unchanged (available/in_use)
+            // No need to update asset status on rejection
+            
+            // Send detailed WhatsApp notification to approver
+            $msg = "❌ *PEMINJAMAN DITOLAK*\n\n";
+            $msg .= "📦 Aset: {$target->asset->name}\n";
+            $msg .= "🏷️ Kode: {$target->asset->code}\n";
+            $msg .= "👤 Pengaju: {$target->requester_name}\n";
+            $msg .= "📅 Tanggal Pengajuan: " . $target->created_at->format('d/m/Y H:i') . "\n";
+            $msg .= "❌ Ditolak oleh: {$user->name}\n";
+            $msg .= "\nStatus aset tetap: *{$target->asset->status}*";
             WhatsAppService::sendMessage($sender, $msg);
             
             // Notify the actual borrower
             if ($target->user->phone) {
-                WhatsAppService::sendMessage($target->user->phone, "Halo {$target->user->name}, mohon maaf pengajuan peminjaman aset *{$target->asset->name}* telah *DITOLAK*.");
+                $borrowerMsg = "❌ *PEMINJAMAN DITOLAK*\n\n";
+                $borrowerMsg .= "Halo {$target->user->name},\n\n";
+                $borrowerMsg .= "Mohon maaf, pengajuan peminjaman Anda telah *DITOLAK*\n\n";
+                $borrowerMsg .= "📦 Aset: {$target->asset->name}\n";
+                $borrowerMsg .= "🏷️ Kode: {$target->asset->code}\n";
+                $borrowerMsg .= "📅 Tanggal Pengajuan: " . $target->created_at->format('d/m/Y H:i') . "\n";
+                $borrowerMsg .= "❌ Ditolak oleh: {$user->name}\n\n";
+                $borrowerMsg .= "Silakan hubungi admin untuk informasi lebih lanjut.";
+                WhatsAppService::sendMessage($target->user->phone, $borrowerMsg);
             }
+            
+            // Create dashboard notification
+            Notification::create([
+                'user_id' => $target->user_id,
+                'title' => 'Peminjaman Ditolak',
+                'message' => "Peminjaman aset {$target->asset->name} ditolak oleh {$user->name}",
+                'type' => 'loan_rejected',
+                'read' => false,
+            ]);
+            
         } else {
             $target->update([
                 'status' => 'rejected',
                 'approved_by' => $user->id,
+                'approved_at' => now(),
             ]);
             
-            $msg = "❌ *Pemeliharaan DITOLAK*\n\nAset: {$target->asset->name}\nTipe: {$target->type}\nDitolak oleh: {$user->name}";
+            // Asset status remains unchanged on rejection
+            
+            // Send detailed WhatsApp notification
+            $msg = "❌ *PEMELIHARAAN DITOLAK*\n\n";
+            $msg .= "📦 Aset: {$target->asset->name}\n";
+            $msg .= "🏷️ Kode: {$target->asset->code}\n";
+            $msg .= "🔧 Tipe: {$target->type}\n";
+            $msg .= "📅 Tanggal Pengajuan: " . $target->created_at->format('d/m/Y H:i') . "\n";
+            $msg .= "❌ Ditolak oleh: {$user->name}\n";
+            $msg .= "\nStatus aset tetap: *{$target->asset->status}*";
             WhatsAppService::sendMessage($sender, $msg);
+            
+            // Create dashboard notification
+            Notification::create([
+                'user_id' => $target->user_id ?? $user->id,
+                'title' => 'Pemeliharaan Ditolak',
+                'message' => "Pemeliharaan aset {$target->asset->name} ditolak oleh {$user->name}",
+                'type' => 'maintenance_rejected',
+                'read' => false,
+            ]);
         }
 
         return response()->json(['status' => 'success']);
