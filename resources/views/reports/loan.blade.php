@@ -117,9 +117,9 @@
                                         <div class="font-weight-bold">{{ $loan->asset->name }}</div>
                                         <small class="text-primary">{{ $loan->asset->code }}</small>
                                     </td>
-                                    <td>{{ $loan->loan_date->format('d/m/Y') }}</td>
-                                    <td>{{ $loan->due_date->format('d/m/Y') }}</td>
-                                    <td>{{ $loan->return_date ? $loan->return_date->format('d/m/Y') : '-' }}</td>
+                                    <td>{{ $loan->loan_date ? $loan->loan_date->format('d/m/Y') : '-' }}</td>
+                                    <td>{{ $loan->expected_return_date ? $loan->expected_return_date->format('d/m/Y') : '-' }}</td>
+                                    <td>{{ $loan->actual_return_date ? $loan->actual_return_date->format('d/m/Y') : '-' }}</td>
                                     <td>
                                         @php
                                             $statusClasses = [

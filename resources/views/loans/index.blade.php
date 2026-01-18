@@ -89,16 +89,18 @@
                                         <strong>{{ $loan->asset->name ?? '-' }}</strong><br>
                                         <small class="text-muted">{{ $loan->asset->asset_code ?? '-' }}</small>
                                     </td>
-                                    <td>{{ $loan->loan_date->format('d/m/Y') }}</td>
+                                    <td>{{ $loan->loan_date ? $loan->loan_date->format('d/m/Y') : '-' }}</td>
                                     <td>
                                         @if($loan->actual_return_date)
                                             <span class="text-success fw-bold">{{ $loan->actual_return_date->format('d/m/Y') }}</span>
                                             <br><small class="text-muted">Aktual</small>
-                                        @else
+                                        @elseif($loan->expected_return_date)
                                             {{ $loan->expected_return_date->format('d/m/Y') }}
                                             @if($loan->isOverdue())
                                                 <br><span class="badge bg-danger">Terlambat</span>
                                             @endif
+                                        @else
+                                            -
                                         @endif
                                     </td>
                                     <td>
