@@ -103,7 +103,8 @@
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
-                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" 
+                                <input type="hidden" name="is_active" value="0">
+                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="1"
                                        {{ old('is_active', $user->is_active) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_active">
                                     Aktifkan User

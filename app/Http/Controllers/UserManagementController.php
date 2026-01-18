@@ -78,11 +78,11 @@ class UserManagementController extends Controller
             'employee_id' => 'nullable|string|max:50|unique:users,employee_id',
             'phone' => 'nullable|string|max:20',
             'department' => 'nullable|string|max:100',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|in:0,1',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = $request->input('is_active', '0') === '1';
 
         User::create($validated);
 
@@ -124,7 +124,7 @@ class UserManagementController extends Controller
             'employee_id' => 'nullable|string|max:50|unique:users,employee_id,' . $id,
             'phone' => 'nullable|string|max:20',
             'department' => 'nullable|string|max:100',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|in:0,1',
         ]);
 
         if ($request->filled('password')) {
@@ -133,7 +133,7 @@ class UserManagementController extends Controller
             unset($validated['password']);
         }
 
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = $request->input('is_active', '0') === '1';
 
         $user->update($validated);
 
