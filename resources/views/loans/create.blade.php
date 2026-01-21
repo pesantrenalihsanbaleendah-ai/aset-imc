@@ -2,6 +2,16 @@
 
 @section('title', 'Ajukan Peminjaman')
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 38px;
+    }
+</style>
+@endpush
+
 @section('content')
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,17 +34,21 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Aset yang Dipinjam <span class="text-danger">*</span></label>
-                                <select name="asset_id" class="form-select @error('asset_id') is-invalid @enderror"
-                                    required>
-                                    <option value="">Pilih Aset</option>
+                                <select name="asset_ids[]" id="asset-select" class="form-select @error('asset_ids') is-invalid @enderror @error('asset_ids.*') is-invalid @enderror"
+                                    multiple="multiple" required>
                                     @foreach($assets as $asset)
-                                        <option value="{{ $asset->id }}" {{ old('asset_id') == $asset->id ? 'selected' : '' }}>
-                                            {{ $asset->asset_code }} - {{ $asset->name }}
+                                        <option value="{{ $asset->id }}" 
+                                            {{ (is_array(old('asset_ids')) && in_array($asset->id, old('asset_ids'))) ? 'selected' : '' }}>
+                                            {{ $asset->asset_code }} - {{ $asset->name }} ({{ $asset->location->name ?? '-' }})
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('asset_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                <small class="text-muted">Anda dapat memilih lebih dari satu aset</small>
+                                @error('asset_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                @error('asset_ids.*')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -103,12 +117,17 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Dokumen Pendukung</label>
-                                <input type="file" name="document"
-                                    class="form-control @error('document') is-invalid @enderror" accept=".pdf,.doc,.docx">
-                                <small class="text-muted">Format: PDF, DOC, DOCX. Max: 2MB</small>
+                                <input type="file" name="document" id="document-input"
+                                    class="form-control @error('document') is-invalid @enderror" 
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                                    onchange="previewDocument(this)">
+                                <small class="text-muted">Format: PDF, DOC, DOCX, JPG, PNG, GIF, WEBP. Max: 2MB</small>
                                 @error('document')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div id="document-preview" class="mt-2" style="display: none;">
+                                    <img id="preview-image" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -137,3 +156,46 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for multiple asset selection
+        $('#asset-select').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Pilih satu atau lebih aset',
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+    // Preview document if it's an image
+    function previewDocument(input) {
+        const preview = document.getElementById('document-preview');
+        const previewImage = document.getElementById('preview-image');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fileType = file.type;
+            
+            // Check if file is an image
+            if (fileType.startsWith('image/')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                // Hide preview for non-image files
+                preview.style.display = 'none';
+            }
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+</script>
+@endpush

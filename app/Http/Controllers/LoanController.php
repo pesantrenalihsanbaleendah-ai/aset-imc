@@ -68,18 +68,18 @@ class LoanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'asset_id' => 'required|exists:assets,id',
+            'asset_ids' => 'required|array|min:1',
+            'asset_ids.*' => 'required|exists:assets,id',
             'requester_name' => 'required|string|max:255',
             'responsible_person' => 'required|string|max:255',
             'purpose' => 'required|string',
             'loan_date' => 'required|date',
             'expected_return_date' => 'required|date|after:loan_date',
             'notes' => 'nullable|string',
-            'document' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif,webp|max:2048',
         ]);
 
-        $validated['status'] = 'pending';
-        $validated['user_id'] = auth()->id(); // Set to logged in user
+        $documentPath = null;
 
         // Handle document upload using PHP native
         if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
@@ -95,22 +95,51 @@ class LoanController extends Controller
             
             $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
             if (move_uploaded_file($tmpName, $fullPath)) {
-                $validated['document_path'] = 'loans/' . $filename;
+                $documentPath = 'loans/' . $filename;
             }
         }
 
-        $loan = Loan::with(['asset', 'user'])->create($validated);
+        $createdLoans = [];
+        $assetIds = $validated['asset_ids'];
+
+        // Create a loan for each selected asset
+        foreach ($assetIds as $assetId) {
+            $loanData = [
+                'asset_id' => $assetId,
+                'user_id' => auth()->id(),
+                'requester_name' => $validated['requester_name'],
+                'responsible_person' => $validated['responsible_person'],
+                'purpose' => $validated['purpose'],
+                'loan_date' => $validated['loan_date'],
+                'expected_return_date' => $validated['expected_return_date'],
+                'notes' => $validated['notes'] ?? null,
+                'document_path' => $documentPath,
+                'status' => 'pending',
+            ];
+
+            $loan = Loan::create($loanData);
+            $createdLoans[] = $loan->load(['asset', 'user']);
+        }
 
         // Notify Admin with approval instructions
         $adminPhone = \App\Models\Setting::get('whatsapp_receiver_number');
-        if ($adminPhone) {
+        if ($adminPhone && count($createdLoans) > 0) {
+            $firstLoan = $createdLoans[0];
+            
+            // Build asset list
+            $assetList = '';
+            foreach ($createdLoans as $index => $loan) {
+                $assetList .= ($index + 1) . ". {$loan->asset->name} ({$loan->asset->asset_code})\n";
+            }
+            
             $msg = "*Pengajuan Peminjaman Baru*\n\n"
-                . "Pengaju: {$loan->requester_name}\n"
-                . "Penanggung Jawab: {$loan->responsible_person}\n"
-                . "Aset: {$loan->asset->name} ({$loan->asset->asset_code})\n"
-                . "Tgl Pinjam: " . $loan->loan_date->format('d M Y') . "\n"
-                . "Tgl Kembali: " . $loan->expected_return_date->format('d M Y') . "\n"
-                . "Tujuan: {$loan->purpose}\n\n"
+                . "Pengaju: {$firstLoan->requester_name}\n"
+                . "Penanggung Jawab: {$firstLoan->responsible_person}\n"
+                . "Jumlah Aset: " . count($createdLoans) . "\n\n"
+                . "Aset yang Dipinjam:\n{$assetList}\n"
+                . "Tgl Pinjam: " . $firstLoan->loan_date->format('d M Y') . "\n"
+                . "Tgl Kembali: " . $firstLoan->expected_return_date->format('d M Y') . "\n"
+                . "Tujuan: {$firstLoan->purpose}\n\n"
                 . "━━━━━━━━━━━━━━━━━━\n"
                 . "💡 *Cara Approval:*\n"
                 . "• Ketik *1* untuk SETUJU\n"
@@ -119,8 +148,13 @@ class LoanController extends Controller
             WhatsAppService::sendMessage($adminPhone, $msg);
         }
 
+        $assetCount = count($createdLoans);
+        $message = $assetCount > 1 
+            ? "Peminjaman untuk {$assetCount} aset berhasil diajukan." 
+            : 'Peminjaman berhasil diajukan.';
+
         return redirect()->route('loans.index')
-            ->with('success', 'Peminjaman berhasil diajukan.');
+            ->with('success', $message);
     }
 
     /**

@@ -213,6 +213,12 @@ class AssetController extends Controller
     {
         $asset = Asset::findOrFail($id);
 
+        // Check if asset has any related loans
+        if ($asset->loans()->count() > 0) {
+            return redirect()->route('assets.index')
+                ->with('error', 'Aset tidak dapat dihapus karena memiliki riwayat peminjaman. Silakan hapus riwayat peminjaman terlebih dahulu atau gunakan status "Dibuang" untuk menonaktifkan aset.');
+        }
+
         // Delete photo if exists
         if ($asset->photo_path) {
             Storage::disk('public')->delete($asset->photo_path);
