@@ -157,6 +157,17 @@
                                                     </button>
                                                 </form>
                                             @endif
+                                            @if(auth()->user() && auth()->user()->role && auth()->user()->role->name === 'super_admin')
+                                                <form action="{{ route('loans.destroy', $loan->id) }}" method="POST"
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat peminjaman ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

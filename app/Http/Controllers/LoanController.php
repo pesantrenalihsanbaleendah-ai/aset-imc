@@ -248,7 +248,11 @@ class LoanController extends Controller
     {
         $loan = Loan::findOrFail($id);
 
-        if ($loan->status !== 'pending') {
+        // Check if user is super admin
+        $isSuperAdmin = Auth::user() && Auth::user()->role && Auth::user()->role->name === 'super_admin';
+
+        // Super admin can delete any loan, others can only delete pending loans
+        if (!$isSuperAdmin && $loan->status !== 'pending') {
             return redirect()->route('loans.index')
                 ->with('error', 'Hanya peminjaman dengan status pending yang dapat dihapus.');
         }
@@ -260,7 +264,7 @@ class LoanController extends Controller
         $loan->delete();
 
         return redirect()->route('loans.index')
-            ->with('success', 'Peminjaman berhasil dihapus.');
+            ->with('success', 'Riwayat peminjaman berhasil dihapus.');
     }
 
     /**
