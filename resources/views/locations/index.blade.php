@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-map-marker-alt me-2"></i>Manajemen Lokasi
             </h1>
@@ -98,8 +98,7 @@
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div class="text-muted">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">`n                    <div class="text-muted small">
                         Menampilkan {{ $locations->firstItem() ?? 0 }} sampai {{ $locations->lastItem() ?? 0 }} dari
                         {{ $locations->total() }} lokasi
                     </div>

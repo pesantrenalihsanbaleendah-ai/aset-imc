@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-hand-holding me-2"></i>Peminjaman Aset
             </h1>
@@ -183,8 +183,8 @@
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div class="text-muted">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+                    <div class="text-muted small">
                         Menampilkan {{ $loans->firstItem() ?? 0 }} sampai {{ $loans->lastItem() ?? 0 }} dari
                         {{ $loans->total() }} peminjaman
                     </div>

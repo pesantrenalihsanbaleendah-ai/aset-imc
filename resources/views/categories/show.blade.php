@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-tag me-2"></i>Detail Kategori
             </h1>
@@ -188,8 +188,7 @@
                             </div>
 
                             <!-- Pagination -->
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div class="text-muted">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">`n                    <div class="text-muted small">
                                     Menampilkan {{ $assets->firstItem() ?? 0 }} sampai {{ $assets->lastItem() ?? 0 }} dari
                                     {{ $assets->total() }} aset
                                 </div>

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <h1 class="h3 mb-0 text-gray-800">
             <i class="fas fa-user-edit me-2"></i>Edit User
         </h1>
@@ -20,7 +20,7 @@
                 @method('PUT')
                 
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-lg-6 mb-3">
                         <h5 class="mb-3 text-primary">Informasi Pribadi</h5>
                         
                         <div class="mb-3">
@@ -69,7 +69,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-lg-6 mb-3">
                         <h5 class="mb-3 text-primary">Akun & Akses</h5>
                         
                         <div class="mb-3">
@@ -126,7 +126,7 @@
 
                 <hr class="my-4">
 
-                <div class="d-flex justify-content-end gap-2">
+                <div class="d-flex flex-wrap justify-content-end gap-2">
                     <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
                         <i class="fas fa-times me-1"></i>Batal
                     </a>

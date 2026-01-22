@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-edit me-2"></i>Edit Pengajuan Peminjaman
             </h1>
@@ -20,7 +20,7 @@
                     @method('PUT')
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-lg-6 mb-3">
                             <div class="mb-3">
                                 <label class="form-label">Aset yang Dipinjam <span class="text-danger">*</span></label>
                                 <select name="asset_id" class="form-select @error('asset_id') is-invalid @enderror"
@@ -63,7 +63,7 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-lg-6 mb-3">
                                     <div class="mb-3">
                                         <label class="form-label">Tanggal Mulai <span class="text-danger">*</span></label>
                                         <input type="date" name="loan_date"
@@ -75,7 +75,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-lg-6 mb-3">
                                     <div class="mb-3">
                                         <label class="form-label">Tanggal Kembali (Estimasi) <span
                                                 class="text-danger">*</span></label>
@@ -91,7 +91,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-lg-6 mb-3">
                             <div class="mb-3">
                                 <label class="form-label">Tujuan Peminjaman <span class="text-danger">*</span></label>
                                 <textarea name="purpose" class="form-control @error('purpose') is-invalid @enderror"
@@ -133,7 +133,7 @@
 
                     <hr class="my-4">
 
-                    <div class="d-flex justify-content-end gap-2">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
                         <button type="reset" class="btn btn-light">
                             <i class="fas fa-undo me-1"></i>Reset
                         </button>

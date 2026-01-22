@@ -4,12 +4,12 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-boxes me-2"></i>Manajemen Aset
             </h1>
-            <div>
-                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
                     <i class="fas fa-file-import me-1"></i>Impor
                 </button>
                 <a href="{{ route('assets.create') }}" class="btn btn-primary">
@@ -204,8 +204,8 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div class="text-muted">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+                    <div class="text-muted small">
                         Menampilkan {{ $assets->firstItem() ?? 0 }} sampai {{ $assets->lastItem() ?? 0 }} dari
                         {{ $assets->total() }} aset
                     </div>

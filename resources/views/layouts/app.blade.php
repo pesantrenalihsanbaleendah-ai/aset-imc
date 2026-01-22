@@ -147,9 +147,37 @@
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             display: flex;
+            flex-wrap: nowrap;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            gap: 1rem;
+            min-height: 70px;
+        }
+
+        .topbar .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .topbar .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .topbar .user-name {
+            font-size: 0.95rem;
+            color: #475569;
+            font-weight: 500;
+            white-space: nowrap;
         }
 
         .card-stat {
@@ -188,6 +216,32 @@
         .table-responsive {
             border-radius: 8px;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Add scroll shadow indicator for mobile */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .table-responsive::-webkit-scrollbar {
+                height: 6px;
+            }
+
+            .table-responsive::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            .table-responsive::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 3px;
+            }
+
+            .table-responsive::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
         }
 
         .table th {
@@ -237,7 +291,7 @@
                 margin-left: 60px;
             }
 
-            .topbar h1 {
+            .topbar .page-title {
                 font-size: 1.25rem;
             }
         }
@@ -264,14 +318,17 @@
             }
 
             .topbar {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-                padding: 15px;
+                padding: 12px 15px;
+                gap: 0.5rem;
             }
 
-            .topbar h1 {
+            .topbar .page-title {
                 font-size: 1.1rem;
+                flex: 1;
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .card-stat {
@@ -299,6 +356,35 @@
 
             .topbar {
                 margin-left: 50px;
+                padding: 10px 12px;
+                gap: 0.5rem;
+                min-height: 60px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .topbar .page-title {
+                font-size: 1rem;
+                flex: 1 1 auto;
+            }
+
+            .topbar .user-avatar {
+                width: 35px;
+                height: 35px;
+            }
+
+            .topbar .user-name {
+                font-size: 0.85rem;
+            }
+
+            /* Hide scrollbar but keep functionality */
+            .topbar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .topbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
             }
 
             .container-fluid {
@@ -320,6 +406,145 @@
             .btn {
                 padding: 8px 12px;
                 font-size: 0.875rem;
+            }
+
+            /* Stack buttons vertically on mobile */
+            .d-flex.gap-2,
+            .d-flex.gap-3 {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+
+            .d-flex.gap-2 .btn,
+            .d-flex.gap-3 .btn {
+                width: 100%;
+            }
+
+            /* Make action buttons stack */
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+
+            .d-flex.justify-content-between > div {
+                width: 100%;
+            }
+
+            .d-flex.justify-content-between .btn,
+            .d-flex.justify-content-between a.btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            /* Table improvements for mobile */
+            .table {
+                font-size: 0.75rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.5rem 0.25rem;
+                white-space: nowrap;
+            }
+
+            /* Badge sizing */
+            .badge {
+                font-size: 0.65rem;
+                padding: 0.25em 0.5em;
+            }
+
+            /* Form improvements */
+            .form-control,
+            .form-select {
+                font-size: 0.875rem;
+            }
+
+            /* Card header */
+            .card-header h5 {
+                font-size: 1rem;
+            }
+
+            /* Alert */
+            .alert {
+                font-size: 0.875rem;
+                padding: 0.75rem;
+            }
+
+            /* Pagination */
+            .pagination {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Additional responsive utilities */
+        @media (max-width: 768px) {
+            /* Make filter forms stack better */
+            .row.g-3 > div {
+                margin-bottom: 0.75rem;
+            }
+
+            /* Improve button groups */
+            .btn-group-sm .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            /* Better spacing for cards */
+            .card-body {
+                padding: 1rem;
+            }
+
+            /* Improve modal on mobile */
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            /* Better form layout */
+            .col-md-6,
+            .col-md-4,
+            .col-md-3,
+            .col-md-2 {
+                width: 100%;
+            }
+
+            /* Improve timeline on mobile */
+            .timeline {
+                padding-left: 20px;
+            }
+
+            .timeline-item i {
+                left: -20px;
+            }
+
+            .timeline-item:not(:last-child):before {
+                left: -14px;
+            }
+        }
+
+        /* Landscape phone and small tablets */
+        @media (min-width: 577px) and (max-width: 768px) {
+            .col-sm-6 {
+                width: 50%;
+            }
+
+            .table {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Tablet improvements */
+        @media (min-width: 769px) and (max-width: 992px) {
+            .sidebar {
+                width: 220px;
+            }
+
+            .main-content {
+                margin-left: 220px;
+            }
+
+            .table {
+                font-size: 0.9rem;
             }
         }
 
@@ -348,6 +573,13 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             border-radius: 12px;
             padding: 0;
+        }
+
+        @media (max-width: 576px) {
+            .notification-dropdown {
+                width: 280px;
+                max-height: 350px;
+            }
         }
 
         .notification-item {
@@ -479,11 +711,10 @@
 
     <div class="main-content">
         <div class="topbar">
-            <h1 class="mb-0">@yield('page-title', 'Dashboard')</h1>
-            <div class="d-flex align-items-center gap-3">
-                
+            <h1 class="mb-0 page-title">@yield('page-title', 'Dashboard')</h1>
+            <div class="d-flex align-items-center gap-2" style="flex-shrink: 0;">
                 {{-- Notification Bell --}}
-                <div class="dropdown me-3">
+                <div class="dropdown">
                     <button class="btn btn-link link-dark position-relative p-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-bell fs-5"></i>
                         @if(isset($unreadCount) && $unreadCount > 0)
@@ -528,11 +759,12 @@
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <span class="d-none d-sm-inline">{{ auth()->user()->name }}</span>
-                    <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=3b82f6&color=fff"
-                        alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
-                </div>
+                {{-- User Name (Hidden on mobile) --}}
+                <span class="d-none d-md-inline user-name">{{ auth()->user()->name }}</span>
+
+                {{-- User Avatar --}}
+                <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=3b82f6&color=fff"
+                    alt="Avatar" class="user-avatar">
             </div>
         </div>
 

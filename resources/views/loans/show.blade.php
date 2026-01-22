@@ -4,11 +4,11 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-hand-holding me-2"></i>Detail Peminjaman
             </h1>
-            <div>
+            <div class="d-flex flex-wrap gap-2">
                 @if($loan->status == 'pending')
                     <a href="{{ route('loans.edit', $loan->id) }}" class="btn btn-warning">
                         <i class="fas fa-edit me-1"></i>Edit
@@ -28,7 +28,7 @@
         @endif
 
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-lg-8 mb-4">
                 <!-- Loan Information -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white">
@@ -161,7 +161,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-lg-4">
                 <!-- Actions -->
                 @if($loan->status == 'pending' && auth()->user() && auth()->user()->role && auth()->user()->role->name != 'staff')
                     <div class="card shadow-sm mb-4">

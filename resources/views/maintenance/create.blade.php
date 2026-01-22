@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="fas fa-plus-circle me-2"></i>Ajukan Pemeliharaan Aset
             </h1>
@@ -121,7 +121,7 @@
                         </ul>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
                         <a href="{{ route('maintenance.index') }}" class="btn btn-secondary">
                             <i class="fas fa-times me-1"></i>Batal
                         </a>
