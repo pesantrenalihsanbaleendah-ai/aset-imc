@@ -201,13 +201,13 @@ class LoanController extends Controller
 
         $validated = $request->validate([
             'asset_id' => 'required|exists:assets,id',
-            'user_id' => 'required|exists:users,id',
+            'requester_name' => 'required|string|max:255',
             'responsible_person' => 'required|string|max:255',
             'purpose' => 'required|string',
             'loan_date' => 'required|date',
             'expected_return_date' => 'required|date|after:loan_date',
             'notes' => 'nullable|string',
-            'document' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,gif,webp|max:2048',
         ]);
 
         // Handle document upload using PHP native

@@ -15,20 +15,22 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <form action="{{ route('maintenance.update', $maintenance->id) }}" method="POST">
+                <form action="{{ route('maintenance.update', $maintenance->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
                     <div class="row">
                         <div class="col-md-6">
+                            <h5 class="mb-3 text-primary">Informasi Aset</h5>
+
                             <div class="mb-3">
-                                <label class="form-label">Aset yang Dirawat <span class="text-danger">*</span></label>
+                                <label class="form-label">Aset <span class="text-danger">*</span></label>
                                 <select name="asset_id" class="form-select @error('asset_id') is-invalid @enderror"
                                     required>
                                     <option value="">Pilih Aset</option>
                                     @foreach($assets as $asset)
                                         <option value="{{ $asset->id }}" {{ old('asset_id', $maintenance->asset_id) == $asset->id ? 'selected' : '' }}>
-                                            [{{ $asset->code }}] {{ $asset->name }} ({{ $asset->status }})
+                                            {{ $asset->asset_code }} - {{ $asset->name }} ({{ ucfirst($asset->status) }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -38,11 +40,18 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Tipe Perawatan <span class="text-danger">*</span></label>
+                                <label class="form-label">Tipe Pemeliharaan <span class="text-danger">*</span></label>
                                 <select name="type" class="form-select @error('type') is-invalid @enderror" required>
-                                    <option value="routine" {{ old('type', $maintenance->type) == 'routine' ? 'selected' : '' }}>Rutin (Routine)</option>
-                                    <option value="repair" {{ old('type', $maintenance->type) == 'repair' ? 'selected' : '' }}>Perbaikan (Repair)</option>
-                                    <option value="upgrade" {{ old('type', $maintenance->type) == 'upgrade' ? 'selected' : '' }}>Peningkatan (Upgrade)</option>
+                                    <option value="">Pilih Tipe</option>
+                                    <option value="preventive" {{ old('type', $maintenance->type) == 'preventive' ? 'selected' : '' }}>
+                                        Preventif - Pemeliharaan Berkala
+                                    </option>
+                                    <option value="corrective" {{ old('type', $maintenance->type) == 'corrective' ? 'selected' : '' }}>
+                                        Korektif - Perbaikan Kerusakan
+                                    </option>
+                                    <option value="predictive" {{ old('type', $maintenance->type) == 'predictive' ? 'selected' : '' }}>
+                                        Prediktif - Berdasarkan Monitoring
+                                    </option>
                                 </select>
                                 @error('type')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -50,37 +59,33 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Jadwal Mulai Perawatan <span class="text-danger">*</span></label>
-                                <input type="date" name="start_date"
-                                    class="form-control @error('start_date') is-invalid @enderror"
-                                    value="{{ old('start_date', $maintenance->start_date ? $maintenance->start_date->format('Y-m-d') : '') }}"
+                                <label class="form-label">Tanggal Dijadwalkan <span class="text-danger">*</span></label>
+                                <input type="date" name="scheduled_date"
+                                    class="form-control @error('scheduled_date') is-invalid @enderror"
+                                    value="{{ old('scheduled_date', $maintenance->scheduled_date ? $maintenance->scheduled_date->format('Y-m-d') : '') }}"
                                     required>
-                                @error('start_date')
+                                @error('scheduled_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-muted">Tanggal rencana pemeliharaan</small>
                             </div>
                         </div>
 
                         <div class="col-md-6">
+                            <h5 class="mb-3 text-primary">Detail Pemeliharaan</h5>
+
                             <div class="mb-3">
-                                <label class="form-label">Masalah / Deskripsi <span class="text-danger">*</span></label>
+                                <label class="form-label">Deskripsi Masalah/Kebutuhan <span
+                                        class="text-danger">*</span></label>
                                 <textarea name="description" class="form-control @error('description') is-invalid @enderror"
-                                    rows="4" required
-                                    placeholder="Jelaskan detail perawatan atau masalah pada aset...">{{ old('description', $maintenance->description) }}</textarea>
+                                    rows="5" required
+                                    placeholder="Jelaskan masalah atau kebutuhan pemeliharaan">{{ old('description', $maintenance->description) }}</textarea>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Vendor / Teknisi</label>
-                                <input type="text" name="vendor" class="form-control @error('vendor') is-invalid @enderror"
-                                    value="{{ old('vendor', $maintenance->vendor) }}"
-                                    placeholder="Contoh: PT. Servis Maju, Bp. Ahmad">
-                                @error('vendor')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+
 
                             <div class="mb-3">
                                 <label class="form-label">Estimasi Biaya</label>
@@ -88,13 +93,43 @@
                                     <span class="input-group-text">Rp</span>
                                     <input type="number" name="cost"
                                         class="form-control @error('cost') is-invalid @enderror"
-                                        value="{{ old('cost', $maintenance->cost) }}" placeholder="0">
+                                        value="{{ old('cost', $maintenance->cost) }}" min="0" step="0.01" placeholder="0">
+                                    @error('cost')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                @error('cost')
+                                <small class="text-muted">Estimasi biaya (opsional, bisa diisi saat selesai)</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Dokumen Pendukung</label>
+                                @if($maintenance->document_path)
+                                    <div class="mb-2">
+                                        <a href="{{ asset('storage/' . $maintenance->document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-download me-1"></i>Lihat Dokumen Saat Ini
+                                        </a>
+                                    </div>
+                                @endif
+                                <input type="file" name="document"
+                                    class="form-control @error('document') is-invalid @enderror"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <small class="text-muted">Format: PDF, DOC, DOCX, JPG, PNG. Max: 2MB</small>
+                                @error('document')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Informasi Tipe Pemeliharaan</h6>
+                        <ul class="mb-0">
+                            <li><strong>Preventif:</strong> Pemeliharaan rutin untuk mencegah kerusakan</li>
+                            <li><strong>Korektif:</strong> Perbaikan atas kerusakan yang sudah terjadi</li>
+                            <li><strong>Prediktif:</strong> Pemeliharaan berdasarkan hasil monitoring kondisi aset</li>
+                        </ul>
                     </div>
 
                     <hr class="my-4">
