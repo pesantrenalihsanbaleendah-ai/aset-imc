@@ -139,9 +139,9 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
                                         <div class="font-weight-bold">{{ $data['asset']->name }}</div>
-                                        <small class="text-primary">{{ $data['asset']->code }}</small>
+                                        <small class="text-primary">{{ $data['asset']->asset_code }}</small>
                                     </td>
-                                    <td>{{ $data['asset']->purchase_date ? $data['asset']->purchase_date->format('d/m/Y') : '-' }}
+                                    <td>{{ $data['asset']->acquisition_date ? $data['asset']->acquisition_date->format('d/m/Y') : '-' }}
                                     </td>
                                     <td class="text-end">Rp {{ number_format($data['asset']->acquisition_price, 0, ',', '.') }}
                                     </td>

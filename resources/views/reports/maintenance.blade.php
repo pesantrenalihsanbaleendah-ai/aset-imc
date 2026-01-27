@@ -113,7 +113,7 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
                                         <div class="font-weight-bold">{{ $maintenance->asset->name }}</div>
-                                        <small class="text-primary">{{ $maintenance->asset->code }}</small>
+                                        <small class="text-primary">{{ $maintenance->asset->asset_code }}</small>
                                     </td>
                                     <td>
                                         @php

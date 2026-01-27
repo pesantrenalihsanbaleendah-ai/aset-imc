@@ -18,7 +18,7 @@ class ReportController extends Controller
     public function index()
     {
         $stats = [
-            'total_assets' => Asset::count(),
+            'total_assets' => Asset::sum('quantity'), // Total quantity, bukan count
             'total_loans' => Loan::count(),
             'total_maintenances' => Maintenance::count(),
             'total_asset_value' => Asset::sum('book_value'),
@@ -59,8 +59,10 @@ class ReportController extends Controller
         $totalValue = $assets->sum('book_value');
         $totalAcquisition = $assets->sum('acquisition_price');
         $totalDepreciation = $totalAcquisition - $totalValue;
+        $totalQuantity = $assets->sum('quantity'); // Total quantity dari hasil filter
+        $totalAssets = Asset::sum('quantity'); // Total quantity keseluruhan aset tanpa filter
 
-        $stats = compact('totalValue', 'totalAcquisition', 'totalDepreciation');
+        $stats = compact('totalValue', 'totalAcquisition', 'totalDepreciation', 'totalQuantity', 'totalAssets');
 
         return view('reports.asset', compact('assets', 'categories', 'locations', 'stats'));
     }

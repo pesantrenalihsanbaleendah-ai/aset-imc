@@ -23,7 +23,12 @@
         <div class="col-md-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nilai Perolehan</div>
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Total Nilai Perolehan
+                        @if(request()->hasAny(['category_id', 'location_id', 'status', 'condition']))
+                            <i class="fas fa-filter ms-1" title="Berdasarkan filter aktif"></i>
+                        @endif
+                    </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">Rp {{ number_format($stats['totalAcquisition'], 0, ',', '.') }}</div>
                 </div>
             </div>
@@ -31,7 +36,12 @@
         <div class="col-md-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Nilai Buku</div>
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                        Total Nilai Buku
+                        @if(request()->hasAny(['category_id', 'location_id', 'status', 'condition']))
+                            <i class="fas fa-filter ms-1" title="Berdasarkan filter aktif"></i>
+                        @endif
+                    </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">Rp {{ number_format($stats['totalValue'], 0, ',', '.') }}</div>
                 </div>
             </div>
@@ -39,7 +49,12 @@
         <div class="col-md-4">
             <div class="card border-left-danger shadow h-100 py-2">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Akumulasi Penyusutan</div>
+                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                        Akumulasi Penyusutan
+                        @if(request()->hasAny(['category_id', 'location_id', 'status', 'condition']))
+                            <i class="fas fa-filter ms-1" title="Berdasarkan filter aktif"></i>
+                        @endif
+                    </div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">Rp {{ number_format($stats['totalDepreciation'], 0, ',', '.') }}</div>
                 </div>
             </div>
@@ -100,11 +115,49 @@
         </div>
     </div>
 
+    <!-- Active Filters Info -->
+    @if(request()->hasAny(['category_id', 'location_id', 'status', 'condition']))
+        <div class="alert alert-info d-flex justify-content-between align-items-center no-print" role="alert">
+            <div>
+                <i class="fas fa-filter me-2"></i>
+                <strong>Filter Aktif:</strong>
+                @if(request('category_id'))
+                    <span class="badge bg-primary ms-2">Kategori: {{ $categories->find(request('category_id'))->name ?? '-' }}</span>
+                @endif
+                @if(request('location_id'))
+                    <span class="badge bg-primary ms-2">Lokasi: {{ $locations->find(request('location_id'))->name ?? '-' }}</span>
+                @endif
+                @if(request('status'))
+                    @php
+                        $statusLabels = ['available' => 'Tersedia', 'in_use' => 'Dipinjam', 'maintenance' => 'Perawatan', 'disposed' => 'Dihapus'];
+                    @endphp
+                    <span class="badge bg-primary ms-2">Status: {{ $statusLabels[request('status')] ?? request('status') }}</span>
+                @endif
+                @if(request('condition'))
+                    @php
+                        $conditionLabels = ['good' => 'Baik', 'damaged' => 'Rusak Ringan', 'broken' => 'Rusak Berat'];
+                    @endphp
+                    <span class="badge bg-primary ms-2">Kondisi: {{ $conditionLabels[request('condition')] ?? request('condition') }}</span>
+                @endif
+            </div>
+            <a href="{{ route('reports.asset') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times me-1"></i>Reset Filter
+            </a>
+        </div>
+    @endif
+
     <!-- Report Table -->
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Hasil Laporan</h6>
-            <span class="badge bg-secondary">Total: {{ $assets->count() }} Item</span>
+            <div class="d-flex gap-2 align-items-center">
+                @if(request()->hasAny(['category_id', 'location_id', 'status', 'condition']))
+                    <span class="badge bg-info">Ditampilkan: {{ $stats['totalQuantity'] ?? 0 }} Unit ({{ $assets->count() }} Item)</span>
+                    <span class="badge bg-secondary">Total Aset: {{ $stats['totalAssets'] ?? 0 }} Unit</span>
+                @else
+                    <span class="badge bg-secondary">Total: {{ $stats['totalQuantity'] ?? $assets->sum('quantity') }} Unit ({{ $assets->count() }} Item)</span>
+                @endif
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -113,6 +166,7 @@
                         <tr>
                             <th width="120px">Kode Aset</th>
                             <th>Nama Aset</th>
+                            <th width="80px" class="text-center">Jumlah</th>
                             <th>Kategori</th>
                             <th>Lokasi</th>
                             <th width="120px">Tgl Perolehan</th>
@@ -124,11 +178,12 @@
                     <tbody>
                         @forelse($assets as $asset)
                             <tr>
-                                <td class="font-weight-bold text-primary">{{ $asset->code }}</td>
+                                <td class="font-weight-bold text-primary">{{ $asset->asset_code }}</td>
                                 <td>{{ $asset->name }}</td>
+                                <td class="text-center"><span class="badge bg-primary">{{ $asset->quantity }}</span></td>
                                 <td>{{ $asset->category->name }}</td>
                                 <td>{{ $asset->location->name }}</td>
-                                <td>{{ $asset->purchase_date ? $asset->purchase_date->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $asset->acquisition_date ? $asset->acquisition_date->format('d/m/Y') : '-' }}</td>
                                 <td class="text-end">Rp {{ number_format($asset->acquisition_price, 0, ',', '.') }}</td>
                                 <td class="text-end text-success font-weight-bold">Rp {{ number_format($asset->book_value, 0, ',', '.') }}</td>
                                 <td>
@@ -143,14 +198,16 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">Tidak ada data aset ditemukan untuk filter ini.</td>
+                                <td colspan="10" class="text-center py-4 text-muted">Tidak ada data aset ditemukan untuk filter ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
                     @if($assets->count() > 0)
                         <tfoot class="bg-light font-weight-bold">
                             <tr>
-                                <td colspan="5" class="text-end">TOTAL:</td>
+                                <td colspan="2" class="text-end">TOTAL:</td>
+                                <td class="text-center"><span class="badge bg-success">{{ $stats['totalQuantity'] ?? $assets->sum('quantity') }}</span></td>
+                                <td colspan="3"></td>
                                 <td class="text-end">Rp {{ number_format($stats['totalAcquisition'], 0, ',', '.') }}</td>
                                 <td class="text-end">Rp {{ number_format($stats['totalValue'], 0, ',', '.') }}</td>
                                 <td></td>

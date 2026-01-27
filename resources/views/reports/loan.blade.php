@@ -115,7 +115,7 @@
                                     </td>
                                     <td>
                                         <div class="font-weight-bold">{{ $loan->asset->name }}</div>
-                                        <small class="text-primary">{{ $loan->asset->code }}</small>
+                                        <small class="text-primary">{{ $loan->asset->asset_code }}</small>
                                     </td>
                                     <td>{{ $loan->loan_date ? $loan->loan_date->format('d/m/Y') : '-' }}</td>
                                     <td>{{ $loan->expected_return_date ? $loan->expected_return_date->format('d/m/Y') : '-' }}</td>
