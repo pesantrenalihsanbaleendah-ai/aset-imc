@@ -104,7 +104,8 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">`n                    <div class="text-muted small">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+                    <div class="text-muted small">
                         Menampilkan {{ $categories->firstItem() ?? 0 }} sampai {{ $categories->lastItem() ?? 0 }} dari
                         {{ $categories->total() }} kategori
                     </div>

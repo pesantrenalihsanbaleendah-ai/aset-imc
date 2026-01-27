@@ -12,6 +12,7 @@ class Asset extends Model
     protected $fillable = [
         'asset_code',
         'name',
+        'quantity',
         'category_id',
         'location_id',
         'responsible_user_id',
@@ -77,7 +78,7 @@ class Asset extends Model
     {
         $prefix = Setting::get('asset_code_prefix', 'AST');
         $year = now()->format('Y');
-        
+
         // Find the last asset with the same prefix and year
         $lastAsset = self::where('asset_code', 'like', "{$prefix}-{$year}-%")
             ->orderBy('asset_code', 'desc')

@@ -102,6 +102,7 @@
                             <tr>
                                 <th>Kode Aset</th>
                                 <th>Nama</th>
+                                <th>Jumlah</th>
                                 <th>Kategori</th>
                                 <th>Lokasi</th>
                                 <th>Status</th>
@@ -120,6 +121,9 @@
                                         @endif
                                     </td>
                                     <td>{{ $asset->name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ $asset->quantity ?? 1 }}</span>
+                                    </td>
                                     <td>
                                         <span class="badge bg-secondary">{{ $asset->category->name ?? '-' }}</span>
                                     </td>
@@ -193,7 +197,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-4">
+                                    <td colspan="9" class="text-center py-4">
                                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                         <p class="text-muted">Tidak ada aset ditemukan. Mulai dengan menambahkan aset baru.</p>
                                     </td>

@@ -19,10 +19,11 @@ class DashboardController extends Controller
         $data = [];
 
         // Data umum (semua role bisa lihat)
-        $data['total_assets'] = Asset::count();
-        $data['assets_in_maintenance'] = Asset::where('status', 'maintenance')->count();
-        $data['damaged_assets'] = Asset::where('condition', 'poor')->count();
-        $data['new_assets'] = Asset::where('created_at', '>=', Carbon::now()->subMonth())->count();
+        // Sum quantities instead of counting records
+        $data['total_assets'] = Asset::sum('quantity') ?: 0;
+        $data['assets_in_maintenance'] = Asset::where('status', 'maintenance')->sum('quantity') ?: 0;
+        $data['damaged_assets'] = Asset::where('condition', 'poor')->sum('quantity') ?: 0;
+        $data['new_assets'] = Asset::where('created_at', '>=', Carbon::now()->subMonth())->sum('quantity') ?: 0;
 
         if ($role === 'super_admin' || $role === 'admin_aset') {
             // Admin dashboard
@@ -37,14 +38,14 @@ class DashboardController extends Controller
                 Carbon::now()->endOfMonth()
             ])->count();
 
-            // Chart data
+            // Chart data - sum quantities instead of counting records
             $data['asset_by_condition'] = \DB::table('assets')
-                ->select(\DB::raw('`condition`, COUNT(*) as count'))
+                ->select(\DB::raw('`condition`, SUM(quantity) as count'))
                 ->groupBy(\DB::raw('`condition`'))
                 ->get();
 
             $data['asset_by_category'] = Asset::with('category')
-                ->selectRaw('category_id, COUNT(*) as count')
+                ->selectRaw('category_id, SUM(quantity) as count')
                 ->groupBy('category_id')
                 ->get();
 
@@ -70,7 +71,7 @@ class DashboardController extends Controller
 
         } elseif ($role === 'staff') {
             // Staff dashboard
-            $data['my_assets'] = Asset::where('responsible_user_id', $user->id)->count();
+            $data['my_assets'] = Asset::where('responsible_user_id', $user->id)->sum('quantity') ?: 0;
             $data['my_loans'] = Loan::where('user_id', $user->id)->count();
             $data['my_borrowed'] = Loan::where('user_id', $user->id)
                 ->where('status', 'approved')

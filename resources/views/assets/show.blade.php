@@ -39,9 +39,16 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
+                                <strong>Jumlah Aset:</strong>
+                                <p class="fs-5"><span class="badge bg-info">{{ $asset->quantity ?? 1 }} Unit</span></p>
+                            </div>
+                            <div class="col-md-6">
                                 <strong>Kategori:</strong>
                                 <p><span class="badge bg-secondary">{{ $asset->category->name ?? '-' }}</span></p>
                             </div>
+                        </div>
+
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <strong>Lokasi:</strong>
                                 <p><i class="fas fa-map-marker-alt text-muted me-1"></i>{{ $asset->location->name ?? '-' }}
@@ -359,103 +366,105 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
-<script>
-@if($asset->qr_code)
-document.addEventListener('DOMContentLoaded', function() {
-    const qrContainer = document.getElementById('qrcode');
-    const logoUrl = '@php echo \App\Models\Setting::get("site_logo") ? asset("storage/" . \App\Models\Setting::get("site_logo")) : ""; @endphp';
-    const qr = qrcode(0, 'H');
-    qr.addData('{{ $asset->qr_code }}');
-    qr.make();
-    const canvas = document.createElement('canvas');
-    const size = 280;
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-    const moduleCount = qr.getModuleCount();
-    const cellSize = size / moduleCount;
-    const gradient = ctx.createLinearGradient(0, 0, size, size);
-    gradient.addColorStop(0, '#3b82f6');
-    gradient.addColorStop(1, '#1e40af');
-    for (let row = 0; row < moduleCount; row++) {
-        for (let col = 0; col < moduleCount; col++) {
-            if (qr.isDark(row, col)) {
-                const x = col * cellSize;
-                const y = row * cellSize;
-                const radius = cellSize * 0.35;
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.roundRect(x + cellSize * 0.05, y + cellSize * 0.05, cellSize * 0.9, cellSize * 0.9, radius);
-                ctx.fill();
+    <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+    <script>
+        @if($asset->qr_code)
+            document.addEventListener('DOMContentLoaded', function () {
+                const qrContainer = document.getElementById('qrcode');
+                const logoUrl = '@php echo \App\Models\Setting::get("site_logo") ? asset("storage/" . \App\Models\Setting::get("site_logo")) : ""; @endphp';
+                const qr = qrcode(0, 'H');
+                qr.addData('{{ $asset->qr_code }}');
+                qr.make();
+                const canvas = document.createElement('canvas');
+                const size = 280;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, size, size);
+                const moduleCount = qr.getModuleCount();
+                const cellSize = size / moduleCount;
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#3b82f6');
+                gradient.addColorStop(1, '#1e40af');
+                for (let row = 0; row < moduleCount; row++) {
+                    for (let col = 0; col < moduleCount; col++) {
+                        if (qr.isDark(row, col)) {
+                            const x = col * cellSize;
+                            const y = row * cellSize;
+                            const radius = cellSize * 0.35;
+                            ctx.fillStyle = gradient;
+                            ctx.beginPath();
+                            ctx.roundRect(x + cellSize * 0.05, y + cellSize * 0.05, cellSize * 0.9, cellSize * 0.9, radius);
+                            ctx.fill();
+                        }
+                    }
+                }
+                if (logoUrl) {
+                    const logo = new Image();
+                    logo.crossOrigin = 'anonymous';
+                    logo.onload = function () {
+                        const logoSize = size * 0.22;
+                        const logoX = (size - logoSize) / 2;
+                        const logoY = (size - logoSize) / 2;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(size / 2, size / 2, logoSize * 0.65, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.strokeStyle = '#3b82f6';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(size / 2, size / 2, logoSize * 0.55, 0, 2 * Math.PI);
+                        ctx.clip();
+                        ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+                        ctx.restore();
+                        qrContainer.appendChild(canvas);
+                    };
+                    logo.onerror = function () { qrContainer.appendChild(canvas); };
+                    logo.src = logoUrl;
+                } else {
+                    qrContainer.appendChild(canvas);
+                }
+            });
+            function downloadQR() {
+                const canvas = document.querySelector('#qrcode canvas');
+                if (canvas) {
+                    canvas.toBlob(function (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = 'QR-{{ $asset->asset_code }}.png';
+                        link.href = url;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    }, 'image/png');
+                }
+            }
+        @endif
+    </script>
+    <style>
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        #qrcode canvas {
+            max-width: 100%;
+            height: auto !important;
+            width: auto !important;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            background: white;
+            padding: 15px;
+        }
+
+        @media (max-width: 768px) {
+            #qrcode canvas {
+                max-width: 250px;
             }
         }
-    }
-    if (logoUrl) {
-        const logo = new Image();
-        logo.crossOrigin = 'anonymous';
-        logo.onload = function() {
-            const logoSize = size * 0.22;
-            const logoX = (size - logoSize) / 2;
-            const logoY = (size - logoSize) / 2;
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, logoSize * 0.65, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 4;
-            ctx.stroke();
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, logoSize * 0.55, 0, 2 * Math.PI);
-            ctx.clip();
-            ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-            ctx.restore();
-            qrContainer.appendChild(canvas);
-        };
-        logo.onerror = function() { qrContainer.appendChild(canvas); };
-        logo.src = logoUrl;
-    } else {
-        qrContainer.appendChild(canvas);
-    }
-});
-function downloadQR() {
-    const canvas = document.querySelector('#qrcode canvas');
-    if (canvas) {
-        canvas.toBlob(function(blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = 'QR-{{ $asset->asset_code }}.png';
-            link.href = url;
-            link.click();
-            URL.revokeObjectURL(url);
-        }, 'image/png');
-    }
-}
-@endif
-</script>
-<style>
-#qrcode {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-}
-#qrcode canvas {
-    max-width: 100%;
-    height: auto !important;
-    width: auto !important;
-    border-radius: 15px;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-    background: white;
-    padding: 15px;
-}
-@media (max-width: 768px) {
-    #qrcode canvas {
-        max-width: 250px;
-    }
-}
-</style>
+    </style>
 @endpush

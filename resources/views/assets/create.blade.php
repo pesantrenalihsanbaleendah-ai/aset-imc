@@ -43,6 +43,16 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label">Jumlah Aset <span class="text-danger">*</span></label>
+                                <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
+                                    value="{{ old('quantity', 1) }}" min="1" required>
+                                @error('quantity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Masukkan jumlah unit aset yang tersedia</small>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Category <span class="text-danger">*</span></label>
                                 <select name="category_id" class="form-select @error('category_id') is-invalid @enderror"
                                     required>

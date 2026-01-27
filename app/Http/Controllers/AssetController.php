@@ -82,6 +82,7 @@ class AssetController extends Controller
         $validated = $request->validate([
             'asset_code' => 'required|unique:assets',
             'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
             'category_id' => 'required|exists:asset_categories,id',
             'location_id' => 'required|exists:locations,id',
             'responsible_user_id' => 'nullable|exists:users,id',
@@ -102,12 +103,12 @@ class AssetController extends Controller
             $originalName = $_FILES['photo']['name'];
             $extension = pathinfo($originalName, PATHINFO_EXTENSION);
             $filename = uniqid() . '.' . $extension;
-            
+
             $destinationPath = storage_path('app/public/assets');
             if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
-            
+
             $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
             if (move_uploaded_file($tmpName, $fullPath)) {
                 $validated['photo_path'] = 'assets/' . $filename;
@@ -160,6 +161,7 @@ class AssetController extends Controller
         $validated = $request->validate([
             'asset_code' => 'required|unique:assets,asset_code,' . $id,
             'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
             'category_id' => 'required|exists:asset_categories,id',
             'location_id' => 'required|exists:locations,id',
             'responsible_user_id' => 'nullable|exists:users,id',
@@ -181,12 +183,12 @@ class AssetController extends Controller
             $originalName = $_FILES['photo']['name'];
             $extension = pathinfo($originalName, PATHINFO_EXTENSION);
             $filename = uniqid() . '.' . $extension;
-            
+
             $destinationPath = storage_path('app/public/assets');
             if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
-            
+
             $fullPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
             if (move_uploaded_file($tmpName, $fullPath)) {
                 // Delete old photo if exists
